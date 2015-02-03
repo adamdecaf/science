@@ -1,4 +1,4 @@
-package science
+package org.adamdecaf.scientist
 import nl.grons.metrics.scala.InstrumentedBuilder
 
 object Experiment {
@@ -17,27 +17,4 @@ object Experiment {
 
     control
   }
-}
-
-trait ExperimentStrategy[T] {
-  def experiment(candidate: => T): Option[T]
-}
-
-object ExperimentStrategy {
-  import scala.util.Random
-  private[this] val random = new Random()
-
-  def default[T]: ExperimentStrategy[T] = new ExperimentStrategy[T] {
-    def experiment(candidate: => T): Option[T] =
-      if (random.nextBoolean()) {
-        Some(candidate)
-      } else {
-        None
-      }
-  }
-}
-
-trait StorageStrategy[C, E] {
-  def store(control: C, experiment: E): Unit
-  def failed[T <: Throwable](control: C, experiment: T): Unit
 }
