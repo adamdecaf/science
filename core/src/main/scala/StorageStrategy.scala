@@ -1,4 +1,4 @@
-package org.adamdecaf.scientist
+package org.decaf.science
 
 trait StorageStrategy[S] {
   def store(control: S, experiment: S): Unit

@@ -1,4 +1,4 @@
-package org.adamdecaf.scientist
+package org.decaf.science
 import scala.util.Random
 
 trait ExperimentStrategy[T] {
@@ -6,7 +6,9 @@ trait ExperimentStrategy[T] {
 }
 
 object ExperimentStrategy {
-  def default[T]: ExperimentStrategy[T] = new ExperimentStrategy[T] {
+  def default[T]: ExperimentStrategy[T] = random[T]
+
+  def random[T]: ExperimentStrategy[T] = new ExperimentStrategy[T] {
     private[this] val random = new Random()
 
     def experiment(candidate: => T): Option[T] =
@@ -15,5 +17,13 @@ object ExperimentStrategy {
       } else {
         None
       }
+  }
+
+  def always[T]: ExperimentStrategy[T] = new ExperimentStrategy[T] {
+    def experiment(candidate: => T): Option[T] = Some(candidate)
+  }
+
+  def never[T]: ExperimentStrategy[T] = new ExperimentStrategy[T] {
+    def experiment(candidate: => T): Option[T] = None
   }
 }

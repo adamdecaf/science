@@ -4,9 +4,8 @@
 
 ## usage
 
-
 ```scala
-import org.adamdecaf.scientist._
+import org.decaf.science._
 
 // todo: InstrumentedBuilder, StorageStrategy, ExperimentStrategy
 

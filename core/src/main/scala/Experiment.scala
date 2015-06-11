@@ -1,26 +1,38 @@
-package org.adamdecaf.scientist
-import nl.grons.metrics.scala.InstrumentedBuilder
+package org.decaf.science
+import scala.util.control.NonFatal
 
 object Experiment {
-  def apply[C, E, Storage](name: String)(control: C, candidate: => E)(implicit metricsBuilder: InstrumentedBuilder,
-                                                                      controlSerializer: Serialization[C, Storage],
-                                                                      candidateSerializer: Serialization[E, Storage],
-                                                                      throwableSerializer: Serialization[Throwable, Storage],
-                                                                      storage: StorageStrategy[Storage],
-                                                                      strategy: ExperimentStrategy[E] = ExperimentStrategy.default): C = {
-    val timer = metricsBuilder.metrics.timer(name)
-    lazy val cache = timer.time(candidate)
+  def apply[Control, Exp, Storage]
+    (storageStrategy: StorageStrategy[Storage])
+    (control: => Control, candidate: => Exp)
+    (implicit
+       controlSerializer: Serialization[Control, Storage],
+       candidateSerializer: Serialization[Exp, Storage],
+       throwableSerializer: Serialization.ThrowableSerialization[Storage],
+       experimentStrategy: ExperimentStrategy[Exp] = ExperimentStrategy.default
+    ) =
+    new Experiment(control, candidate, controlSerializer, candidateSerializer, throwableSerializer, storageStrategy, experimentStrategy)
+}
 
+class Experiment[Control, Exp, Storage] private(
+  control: Control,
+  candidate: => Exp,
+  controlSerializer: Serialization[Control, Storage],
+  candidateSerializer: Serialization[Exp, Storage],
+  throwableSerializer: Serialization.ThrowableSerialization[Storage],
+  storageStrategy: StorageStrategy[Storage],
+  experimentStrategy: ExperimentStrategy[Exp]
+) {
+  def run(): Control = {
     try {
-      strategy.candidate(cache).foreach { trial =>
+      experimentStrategy.experiment(candidate).foreach { trial =>
         val controlSerialized = controlSerializer.serialize(control)
         val candidateSerialized = candidateSerializer.serialize(trial)
-        storage.store(controlSerialized, candidateSerialized)
+        storageStrategy.store(controlSerialized, candidateSerialized)
       }
     } catch {
-      case err: Throwable =>
-        val controlSerialized = controlSerializer.serialize(control)
-        storage.failed(controlSerialized, err)
+      case NonFatal(err) =>
+        storageStrategy.failed(controlSerializer.serialize(control), err)(throwableSerializer)
     }
 
     control
