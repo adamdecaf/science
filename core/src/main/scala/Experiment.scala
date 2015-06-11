@@ -10,8 +10,8 @@ object Experiment {
        candidateSerializer: Serialization[Exp, Storage],
        throwableSerializer: Serialization.ThrowableSerialization[Storage],
        experimentStrategy: ExperimentStrategy[Exp] = ExperimentStrategy.default
-    ) =
-    new Experiment(control, candidate, controlSerializer, candidateSerializer, throwableSerializer, storageStrategy, experimentStrategy)
+    ): Control =
+    new Experiment(control, candidate, controlSerializer, candidateSerializer, throwableSerializer, storageStrategy, experimentStrategy).run()
 }
 
 class Experiment[Control, Exp, Storage] private(
