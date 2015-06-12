@@ -36,15 +36,14 @@ class Experiment[Control, Exp, Storage](
   def run(): Control = {
     try {
       val controlSerialized = controlSerializer.serialize(control)
-      val candidateSerialized = experimentStrategy.experiment(candidate).map { trial =>
-        candidateSerializer.serialize(trial)
+      val candidateSerialized = experimentStrategy.experiment(candidate).map { candidate =>
+        candidateSerializer.serialize(candidate)
       }
       storageStrategy.store(controlSerialized, candidateSerialized)
     } catch {
       case NonFatal(err) =>
         storageStrategy.failed(controlSerializer.serialize(control), err)(throwableSerializer)
     }
-
     control
   }
 }

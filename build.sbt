@@ -8,6 +8,10 @@ lazy val root = Project("science-root", file("."))
 lazy val core = Project("science-core", file("./core"))
   .settings(name := "science-core")
   .settings(baseSettings: _*)
+  .settings(libraryDependencies ++= Seq(
+              "org.slf4j" % "slf4j-api" % "1.7.12",
+              "org.slf4j" % "log4j-over-slf4j" % "1.7.12"
+            ))
 
 lazy val fs = Project("science-fs", file("./fs"))
   .dependsOn(core)
