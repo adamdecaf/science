@@ -2,19 +2,29 @@ package org.decaf.science
 import scala.util.control.NonFatal
 
 object Experiment {
-  def apply[Control, Exp, Storage]
-    (storageStrategy: StorageStrategy[Storage])
-    (control: => Control, candidate: => Exp)
-    (implicit
-       controlSerializer: Serialization[Control, Storage],
-       candidateSerializer: Serialization[Exp, Storage],
-       throwableSerializer: Serialization.ThrowableSerialization[Storage],
-       experimentStrategy: ExperimentStrategy[Exp] = ExperimentStrategy.default
-    ): Control =
-    new Experiment(control, candidate, controlSerializer, candidateSerializer, throwableSerializer, storageStrategy, experimentStrategy).run()
+  def apply[Storage](storageStrategy: StorageStrategy[Storage]) = new ExperimentBuilder(storageStrategy)
 }
 
-class Experiment[Control, Exp, Storage] private(
+class ExperimentBuilder[Storage](storage: StorageStrategy[Storage]) {
+  def apply[Control, Exp](control: => Control, candidate: => Exp)(implicit
+                                                                  controlSerializer: Serialization[Control, Storage],
+                                                                  candidateSerializer: Serialization[Exp, Storage],
+                                                                  throwableSerializer: Serialization.ThrowableSerialization[Storage],
+                                                                  experimentStrategy: ExperimentStrategy[Exp] = ExperimentStrategy.default): Control =
+    new Experiment(control, candidate, controlSerializer, candidateSerializer, throwableSerializer, storage, experimentStrategy).run()
+
+  def apply[Exp](strategy: ExperimentStrategy[Exp]) = new ExperimentFromStorageAndStrategyBuilder(storage, strategy)
+}
+
+class ExperimentFromStorageAndStrategyBuilder[Storage, Exp](storage: StorageStrategy[Storage], experimentStrategy: ExperimentStrategy[Exp]) {
+  def apply[Control](control: => Control, candidate: => Exp)(implicit
+                                                             controlSerializer: Serialization[Control, Storage],
+                                                             candidateSerializer: Serialization[Exp, Storage],
+                                                             throwableSerializer: Serialization.ThrowableSerialization[Storage]): Control =
+    new Experiment(control, candidate, controlSerializer, candidateSerializer, throwableSerializer, storage, experimentStrategy).run()
+}
+
+class Experiment[Control, Exp, Storage](
   control: Control,
   candidate: => Exp,
   controlSerializer: Serialization[Control, Storage],
@@ -25,11 +35,11 @@ class Experiment[Control, Exp, Storage] private(
 ) {
   def run(): Control = {
     try {
-      experimentStrategy.experiment(candidate).foreach { trial =>
-        val controlSerialized = controlSerializer.serialize(control)
-        val candidateSerialized = candidateSerializer.serialize(trial)
-        storageStrategy.store(controlSerialized, candidateSerialized)
+      val controlSerialized = controlSerializer.serialize(control)
+      val candidateSerialized = experimentStrategy.experiment(candidate).map { trial =>
+        candidateSerializer.serialize(trial)
       }
+      storageStrategy.store(controlSerialized, candidateSerialized)
     } catch {
       case NonFatal(err) =>
         storageStrategy.failed(controlSerializer.serialize(control), err)(throwableSerializer)
