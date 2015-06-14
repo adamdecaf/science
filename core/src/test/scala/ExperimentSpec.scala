@@ -31,7 +31,16 @@ object ExperimentSpec extends Specification {
     storage.getAllFailedResults() must beEmpty
   }
 
-  "record failed experiments" in pending
+  "record failed experiments" in new context {
+    (1 to 10) foreach { _ =>
+      alwaysExperiment(incrementControl(), failingExperiment())
+    }
+
+    controlCounter must be_==(10)
+    experimentCounter must be_==(0)
+
+    storage.getAllFailedResults() must have size(10)
+  }
 
   trait context extends Scope {
     var controlCounter = 0
@@ -46,6 +55,8 @@ object ExperimentSpec extends Specification {
       experimentCounter += 1
       experimentCounter
     }
+
+    def failingExperiment(): Int = throw new Exception("boom")
 
     val storage = new InMemoryStorageStrategy[String]
     lazy val alwaysExperiment = Experiment(storage)(ExperimentStrategy.always[Int])
