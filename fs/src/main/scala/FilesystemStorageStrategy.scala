@@ -4,8 +4,8 @@ import java.nio.file.{Files, StandardOpenOption}
 import org.decaf.science.{Serialization, StorageStrategy}
 import org.slf4j.LoggerFactory
 
-class FilesystemStorageStrategy(base: File) extends StorageStrategy[Array[Byte]] {
-  def store(control: Array[Byte], maybeExperiment: Option[Array[Byte]] = None): Unit = {
+class FilesystemStorageStrategy(base: File) extends StorageStrategy[String] {
+  def store(control: String, maybeExperiment: Option[String] = None): Unit = {
     val now = getNanosAsString()
 
     val controlFile = new File(s"${basePath}/${now}-control")
@@ -17,7 +17,7 @@ class FilesystemStorageStrategy(base: File) extends StorageStrategy[Array[Byte]]
     }
   }
 
-  def failed[T <: Throwable](control: Array[Byte], experiment: T)(implicit serializer: Serialization[T, Array[Byte]]): Unit = {
+  def failed[T <: Throwable](control: String, experiment: T)(implicit serializer: Serialization[T, String]): Unit = {
     val now = getNanosAsString()
 
     val controlFile = new File(s"${basePath}/${now}-control")
@@ -27,8 +27,9 @@ class FilesystemStorageStrategy(base: File) extends StorageStrategy[Array[Byte]]
     saveToFile(serializer.serialize(experiment), failedFile)
   }
 
-  private[this] def saveToFile(bytes: Array[Byte], file: File): Unit =
+  private[this] def saveToFile(str: String, file: File): Unit =
     try {
+      val bytes = str.map(_.toByte).toArray
       Files.write(file.toPath, bytes, StandardOpenOption.CREATE, StandardOpenOption.WRITE)
     } catch {
       case err: IOException =>
@@ -36,9 +37,8 @@ class FilesystemStorageStrategy(base: File) extends StorageStrategy[Array[Byte]]
     }
 
   private[this] lazy val basePath = {
-    val absolutePath = base.getAbsolutePath
-    if (absolutePath.endsWith("/")) {
-      absolutePath
+    if (base.isDirectory()) {
+      base.getAbsolutePath
     } else {
       base.getParent
     }
