@@ -35,6 +35,10 @@ Two blocks of code are executed, which are a control and an "experiment". Each i
 - [fs](fs/) (raw filesystem storage)
 - [In Memory](core/src/main/scala/InMemoryStorageStrategy.scala) (useful for basic testing) -- **not threadsafe**
 
+## Issues
+
+Please make a github issue with your issue. I'll work with you to get a fix implemented and released. Thanks!
+
 ## Contributing
 
 1. Make a github issue or ping me on twitter ([@adamdecaf](https://twitter.com/adamdecaf)) so we don't duplicate work.
