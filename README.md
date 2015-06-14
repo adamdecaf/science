@@ -26,8 +26,26 @@ def new(): Double = ???
 val result: Int = experiment(old(), new())
 ```
 
-## Why?
+## How it works
 
+Two blocks of code are executed, which are a control and an "experiment". Each is saved off to a storage medium for later analysis. This allows you to compare directly the differences between the changes made in your application code. In order to maintain you existing types and flow the control block is returned so your application is able to continue on unchanged.
 
+## Storage Strategies
+
+- [fs](fs/) (raw filesystem storage)
+- [In Memory](core/src/main/scala/InMemoryStorageStrategy.scala) (useful for basic testing) -- **not threadsafe**
+
+## Contributing
+
+1. Make a github issue or ping me on twitter ([@adamdecaf](https://twitter.com/adamdecaf)) so we don't duplicate work.
+1. Fork project to your organization / account
+1. Submit PR with passing tests.
+1. I'll merge it!
+
+## Contributors
+
+- Adam Shannon ([@adamdecaf](https://twitter.com/adamdecaf))
 
 ## License
+
+Apache 2.0 - See [LICENSE](LICENSE)

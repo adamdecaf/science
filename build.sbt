@@ -23,8 +23,7 @@ val baseSettings: Seq[Setting[_]] =
     organization := "org.decaf",
     scalaVersion := "2.11.6",
     crossScalaVersions := Seq("2.10.5", "2.11.6"),
-    version in ThisBuild := "1-SNAPSHOT",
-
+    version in ThisBuild := "1.0.0-SNAPSHOT",
     scalacOptions ++= Seq(
       "-deprecation", "-feature", "-Ywarn-dead-code", "-Ywarn-numeric-widen", "-Ywarn-inaccessible", "-unchecked"
     ),
