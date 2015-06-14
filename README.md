@@ -2,6 +2,8 @@
 
 > Allowing experiments in program logic to be studied and tested.
 
+This library attempts to offer a solution for testing experimental code branches / paths in your real world applications with real world data and performance, without costing you the hassle of breaking existing data or code. It has been inspired by the [github/scientist](https://github.com/github/scientist) library.
+
 ## Usage
 
 Add the following to your project's build definition.
