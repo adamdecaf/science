@@ -45,5 +45,5 @@ class FilesystemStorageStrategy(base: File) extends StorageStrategy[String] {
   }
 
   private[this] lazy val log = LoggerFactory.getLogger(this.getClass)
-  private[this] def getNanosAsString(): String = System.currentTimeMillis().toString
+  private[this] def getNanosAsString(): String = System.nanoTime().toString
 }
