@@ -2,7 +2,7 @@ import sbt._
 import Keys._
 
 lazy val root = Project("science-root", file("."))
-  .aggregate(core, fs)
+  .aggregate(core, fs, metrics)
   .settings(publish := {}, publishLocal := {})
 
 lazy val core = Project("science-core", file("./core"))
@@ -17,6 +17,13 @@ lazy val fs = Project("science-fs", file("./fs"))
   .dependsOn(core)
   .settings(name := "science-fs")
   .settings(baseSettings: _*)
+
+lazy val metrics = Project("science-metrics", file("./metrics"))
+  .dependsOn(core)
+  .settings(name := "science-metrics")
+  .settings(baseSettings: _*)
+  .settings(resolvers += "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/")
+  .settings(libraryDependencies += "io.dropwizard.metrics" % "metrics-core" % "4.0.0-SNAPSHOT")
 
 val baseSettings: Seq[Setting[_]] =
   Seq(

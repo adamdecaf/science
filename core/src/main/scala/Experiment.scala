@@ -31,19 +31,43 @@ class Experiment[Control, Exp, Storage](
   candidateSerializer: Serialization[Exp, Storage],
   throwableSerializer: Serialization.ThrowableSerialization[Storage],
   storageStrategy: StorageStrategy[Storage],
-  experimentStrategy: ExperimentStrategy[Exp]
+  experimentStrategy: ExperimentStrategy[Exp],
+  afterExperiments: Seq[AfterExperiment] = Seq.empty
 ) {
+  def withAfterExperiment(after: AfterExperiment): Experiment[Control, Exp, Storage] =
+    new Experiment(control, candidate, controlSerializer, candidateSerializer, throwableSerializer, storageStrategy, experimentStrategy, afterExperiments :+ after)
+
   def run(): Control = {
     try {
       val controlSerialized = controlSerializer.serialize(control)
+      afterExperiments.foreach(_.afterControl())
+
       val candidateSerialized = experimentStrategy.experiment(candidate).map { candidate =>
-        candidateSerializer.serialize(candidate)
+        val result = candidateSerializer.serialize(candidate)
+        afterExperiments.foreach(_.afterExperiment())
+        result
       }
+
       storageStrategy.store(controlSerialized, candidateSerialized)
     } catch {
       case NonFatal(err) =>
         storageStrategy.failed(controlSerializer.serialize(control), err)(throwableSerializer)
+        afterExperiments.foreach(_.afterExceptionInExperiment())
     }
     control
+  }
+}
+
+trait AfterExperiment {
+  def afterControl(): Unit
+  def afterExperiment(): Unit
+  def afterExceptionInExperiment(): Unit
+}
+
+object AfterExperiment {
+  lazy val default: AfterExperiment = new AfterExperiment {
+    def afterControl(): Unit = {}
+    def afterExperiment(): Unit = {}
+    def afterExceptionInExperiment(): Unit = {}
   }
 }
