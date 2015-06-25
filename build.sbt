@@ -3,6 +3,7 @@ import Keys._
 
 lazy val root = Project("science-root", file("."))
   .aggregate(core, fs, metrics)
+  .settings(baseSettings: _*)
   .settings(publish := {}, publishLocal := {})
 
 lazy val core = Project("science-core", file("./core"))
@@ -28,8 +29,8 @@ lazy val metrics = Project("science-metrics", file("./metrics"))
 val baseSettings: Seq[Setting[_]] =
   Seq(
     organization := "org.decaf",
-    scalaVersion := "2.11.6",
-    crossScalaVersions := Seq("2.10.5", "2.11.6"),
+    scalaVersion := "2.11.7",
+    crossScalaVersions := Seq("2.10.5", "2.11.7"),
     version in ThisBuild := "1.0.0-SNAPSHOT",
     scalacOptions ++= Seq(
       "-deprecation", "-feature", "-Ywarn-dead-code", "-Ywarn-numeric-widen", "-Ywarn-inaccessible", "-unchecked"
