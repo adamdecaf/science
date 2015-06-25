@@ -16,7 +16,7 @@ class ExperimentBuilder[Storage](storage: StorageStrategy[Storage]) {
   def apply[Exp](strategy: ExperimentStrategy[Exp]) = new ExperimentFromStorageAndStrategyBuilder(storage, strategy)
 }
 
-class ExperimentFromStorageAndStrategyBuilder[Storage, Exp](storage: StorageStrategy[Storage], experimentStrategy: ExperimentStrategy[Exp]) {
+class ExperimentFromStorageAndStrategyBuilder[Storage, Exp](val storage: StorageStrategy[Storage], val experimentStrategy: ExperimentStrategy[Exp]) {
   def apply[Control](control: => Control, candidate: => Exp)(implicit
                                                              controlSerializer: Serialization[Control, Storage],
                                                              candidateSerializer: Serialization[Exp, Storage],
