@@ -7,7 +7,7 @@ import io.dropwizard.metrics.{Meter, MetricRegistry, Timer}
 object MetricsExperimentSpec extends Specification {
 
   "record in metrics when experiments pass through" in new context {
-    (1 to 10) foreach { _ =>
+    (1 to 10) foreach { i =>
       always(control(), experiment())
     }
 
@@ -26,6 +26,9 @@ object MetricsExperimentSpec extends Specification {
 
     timer1.getCount() must be_==(10)
     timer2.getCount() must be_==(10)
+
+    controlCount must be_==(10)
+    experimentCount must be_==(10)
   }
 
   "mark a failure during experiments" in new context {
@@ -35,11 +38,22 @@ object MetricsExperimentSpec extends Specification {
     meter.getCount() must be_==(1)
   }
 
-  def control(): String = "control"
-  def experiment(): String = "experiment"
-  def failing(): String = throw new Exception("nope")
-
   trait context extends Scope {
+    var controlCount: Int = 0
+    var experimentCount: Int = 0
+
+    def control(): String = {
+      controlCount += 1
+      "control"
+    }
+
+    def experiment(): String = {
+      experimentCount += 1
+      "experiment"
+    }
+
+    def failing(): String = throw new Exception("nope")
+
     val registry = new MetricRegistry()
     val storage = new InMemoryStorageStrategy[String]
     val exp = Experiment(storage)(ExperimentStrategy.always[String])

@@ -25,7 +25,7 @@ class ExperimentFromStorageAndStrategyBuilder[Storage, Exp](val storage: Storage
 }
 
 class Experiment[Control, Exp, Storage](
-  control: Control,
+  control: => Control,
   candidate: => Exp,
   controlSerializer: Serialization[Control, Storage],
   candidateSerializer: Serialization[Exp, Storage],
@@ -42,16 +42,14 @@ class Experiment[Control, Exp, Storage](
     new Experiment(control, candidate, controlSerializer, candidateSerializer, throwableSerializer, storageStrategy, experimentStrategy, duringExperiment, afterExperiments :+ after)
 
   def run(): Control = {
+    val during = duringExperiment getOrElse DuringExperiment.empty
+    val evaluatedControl = during.duringControl(control)
+
+    val controlSerialized = controlSerializer.serialize(evaluatedControl)
+    afterExperiments.foreach(_.afterControl())
+
     try {
-      val c = duringExperiment.map { during =>
-        during.duringControl(control)
-      } getOrElse control
-
-      val controlSerialized = controlSerializer.serialize(c)
-      afterExperiments.foreach(_.afterControl())
-
-      val candidateSerialized = {
-        val during = duringExperiment getOrElse DuringExperiment.empty
+      val candidateSerialized =
         for {
           candidate <- experimentStrategy.experiment(during.duringExperiment(candidate))
         } yield {
@@ -59,15 +57,15 @@ class Experiment[Control, Exp, Storage](
           afterExperiments.foreach(_.afterExperiment())
           result
         }
-      }
 
       storageStrategy.store(controlSerialized, candidateSerialized)
     } catch {
       case NonFatal(err) =>
-        storageStrategy.failed(controlSerializer.serialize(control), err)(throwableSerializer)
+        storageStrategy.failed(controlSerializer.serialize(evaluatedControl), err)(throwableSerializer)
         afterExperiments.foreach(_.afterExceptionInExperiment())
     }
-    control
+
+    evaluatedControl
   }
 }
 

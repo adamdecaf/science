@@ -24,10 +24,10 @@ object MetricsExperiment {
       val experimentTimer = findAndRegisterTimer(s"${name}.experiment-timer")
 
       val during = new DuringExperiment[Control, Exp] {
-        def duringControl(exp: => Control): Control = {
+        def duringControl(c: => Control): Control = {
           val context = controlTimer.time
           try {
-            exp
+            c
           } finally {
             context.stop
           }
