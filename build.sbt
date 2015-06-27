@@ -1,5 +1,6 @@
 import sbt._
 import Keys._
+import bintray.Keys._
 
 lazy val root = Project("science-root", file("."))
   .aggregate(core, fs, metrics)
@@ -48,28 +49,9 @@ val baseSettings: Seq[Setting[_]] =
   )
 
 val publishSettings: Seq[Setting[_]] =
-  Seq(
-    publishTo <<= version { v: String =>
-      val nexus = "https://oss.sonatype.org/"
-      if (v.trim.endsWith("SNAPSHOT")) Some("snapshots" at nexus + "content/repositories/snapshots/")
-      else                             Some("releases" at nexus + "service/local/staging/deploy/maven2/")
-    },
-    publishMavenStyle := true,
+  bintrayPublishSettings ++ Seq(
     publishArtifact in Test := false,
-    pomIncludeRepository := { _ => false },
-    licenses := Seq("Apache-2.0" -> url("http://opensource.org/licenses/Apache-2.0")),
+    repository in bintray := "open-source",
     homepage := Some(url("https://github.com/adamdecaf/science")),
-    pomExtra := (
-      <scm>
-        <url>git@github.com:adamdecaf/science.git</url>
-        <connection>scm:git:git@github.com:adamdecaf/science.git</connection>
-        </scm>
-        <developers>
-        <developer>
-        <id>zcox</id>
-        <name>Adam Shannon</name>
-        <url>http://ashannon.us</url>
-          </developer>
-        </developers>
-    )
+    licenses ++= Seq(("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0.html")))
   )
