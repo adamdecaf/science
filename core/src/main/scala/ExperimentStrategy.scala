@@ -19,6 +19,15 @@ object ExperimentStrategy {
       }
   }
 
+  def boolean[T](cond: => Boolean): ExperimentStrategy[T] = new ExperimentStrategy[T] {
+    def experiment(candidate: => T): Option[T] =
+      if (cond) {
+        Some(candidate)
+      } else {
+        None
+      }
+  }
+
   def always[T]: ExperimentStrategy[T] = new ExperimentStrategy[T] {
     def experiment(candidate: => T): Option[T] = Some(candidate)
   }

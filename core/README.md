@@ -14,16 +14,7 @@ This class answers the question "Given some outside (read: side-effecty) state d
 
 ```scala
 // Define something like this in another class of yours
-object TryBetaFeaturesForUser {
-  def apply[T](userId: String)(body: => T): ExperimentStrategy[T] = new ExperimentStrategy[T] {
-    def experiment(candidate: => T): Option[T] =
-      if (userHasEnabledBetaFeatures(userId)) // However you determine to try out the experiment.
-        Some(body)
-      } else {
-        None
-      }
-  }
-}
+val strategy = ExperimentStrategy.boolean(config.getBoolean("new-user-feature-enabled"))
 ```
 
 __Serialization__
