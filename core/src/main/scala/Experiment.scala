@@ -32,20 +32,33 @@ class Experiment[Control, Exp, Storage](
   throwableSerializer: Serialization.ThrowableSerialization[Storage],
   storageStrategy: StorageStrategy[Storage],
   experimentStrategy: ExperimentStrategy[Exp],
+  duringExperiment: Option[DuringExperiment[Control, Exp]] = Option.empty,
   afterExperiments: Seq[AfterExperiment] = Seq.empty
 ) {
+  def withDuringExperiment(during: DuringExperiment[Control, Exp]): Experiment[Control, Exp, Storage] =
+    new Experiment(control, candidate, controlSerializer, candidateSerializer, throwableSerializer, storageStrategy, experimentStrategy, Some(during), afterExperiments)
+
   def withAfterExperiment(after: AfterExperiment): Experiment[Control, Exp, Storage] =
-    new Experiment(control, candidate, controlSerializer, candidateSerializer, throwableSerializer, storageStrategy, experimentStrategy, afterExperiments :+ after)
+    new Experiment(control, candidate, controlSerializer, candidateSerializer, throwableSerializer, storageStrategy, experimentStrategy, duringExperiment, afterExperiments :+ after)
 
   def run(): Control = {
     try {
-      val controlSerialized = controlSerializer.serialize(control)
+      val c = duringExperiment.map { during =>
+        during.duringControl(control)
+      } getOrElse control
+
+      val controlSerialized = controlSerializer.serialize(c)
       afterExperiments.foreach(_.afterControl())
 
-      val candidateSerialized = experimentStrategy.experiment(candidate).map { candidate =>
-        val result = candidateSerializer.serialize(candidate)
-        afterExperiments.foreach(_.afterExperiment())
-        result
+      val candidateSerialized = {
+        val during = duringExperiment getOrElse DuringExperiment.empty
+        for {
+          candidate <- experimentStrategy.experiment(during.duringExperiment(candidate))
+        } yield {
+          val result = candidateSerializer.serialize(candidate)
+          afterExperiments.foreach(_.afterExperiment())
+          result
+        }
       }
 
       storageStrategy.store(controlSerialized, candidateSerialized)
@@ -56,6 +69,18 @@ class Experiment[Control, Exp, Storage](
     }
     control
   }
+}
+
+object DuringExperiment {
+  def empty[C, E] = new DuringExperiment[C, E] {
+    def duringControl(c: => C): C = c
+    def duringExperiment(e: => E): E = e
+  }
+}
+
+trait DuringExperiment[C, E] {
+  def duringControl(c: => C): C
+  def duringExperiment(e: => E): E
 }
 
 trait AfterExperiment {

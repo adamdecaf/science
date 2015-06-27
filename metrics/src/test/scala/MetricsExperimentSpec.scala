@@ -2,7 +2,7 @@ package org.decaf.science.metrics
 import org.decaf.science._
 import org.specs2.specification.Scope
 import org.specs2.mutable.Specification
-import io.dropwizard.metrics.{Meter, MetricRegistry}
+import io.dropwizard.metrics.{Meter, MetricRegistry, Timer}
 
 object MetricsExperimentSpec extends Specification {
 
@@ -20,6 +20,12 @@ object MetricsExperimentSpec extends Specification {
     meter1.getCount() must be_==(10)
     meter2.getCount() must be_==(10)
     meter3.getCount() must be_==(0)
+
+    val timer1: Timer = registry.timer("test-metrics-experiment.control-timer")
+    val timer2: Timer = registry.timer("test-metrics-experiment.experiment-timer")
+
+    timer1.getCount() must be_==(10)
+    timer2.getCount() must be_==(10)
   }
 
   "mark a failure during experiments" in new context {

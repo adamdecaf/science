@@ -33,3 +33,8 @@ So, if you had an experiment called `test-experiment` your three metrics would b
 - `test-experiment.control`
 - `test-experiment.experiment`
 - `test-experiment.exceptions-during-experiments`
+
+Also, timers will be created under the following names.
+
+- `test-experiment.control-timer`
+- `test-experiment.experiment-timer`

@@ -1,6 +1,7 @@
 package org.decaf.science.metrics
 import org.decaf.science._
 import io.dropwizard.metrics._
+import java.util.Iterator
 
 object MetricsExperiment {
   def apply[Storage, Exp](registry: MetricRegistry)(name: String, exp: ExperimentFromStorageAndStrategyBuilder[Storage, Exp]): ExperimentFromStorageAndStrategyBuilder[Storage, Exp] =
@@ -15,9 +16,31 @@ object MetricsExperiment {
                                                                         throwableSerializer: Serialization.ThrowableSerialization[Storage]): Control = {
       val parent = new Experiment(control, candidate, controlSerializer, candidateSerializer, throwableSerializer, storage, experimentStrategy)
 
-      val controlMeter: Meter = findAndRegisterMeter(s"${name}.control")
-      val experimentMeter: Meter = findAndRegisterMeter(s"${name}.experiment")
-      val exceptionsDuringExperimentsMeter: Meter = findAndRegisterMeter(s"${name}.exceptions-during-experiments")
+      val controlMeter = findAndRegisterMeter(s"${name}.control")
+      val experimentMeter = findAndRegisterMeter(s"${name}.experiment")
+      val exceptionsDuringExperimentsMeter = findAndRegisterMeter(s"${name}.exceptions-during-experiments")
+
+      val controlTimer = findAndRegisterTimer(s"${name}.control-timer")
+      val experimentTimer = findAndRegisterTimer(s"${name}.experiment-timer")
+
+      val during = new DuringExperiment[Control, Exp] {
+        def duringControl(exp: => Control): Control = {
+          val context = controlTimer.time
+          try {
+            exp
+          } finally {
+            context.stop
+          }
+        }
+        def duringExperiment(exp: => Exp): Exp = {
+          val context = experimentTimer.time
+          try {
+            exp
+          } finally {
+            context.stop
+          }
+        }
+      }
 
       val after = new AfterExperiment {
         def afterControl(): Unit = controlMeter.mark()
@@ -25,17 +48,26 @@ object MetricsExperiment {
         def afterExceptionInExperiment(): Unit = exceptionsDuringExperimentsMeter.mark()
       }
 
-      parent.withAfterExperiment(after).run()
+      parent.withDuringExperiment(during).withAfterExperiment(after).run()
+    }
+
+    private[this] def findAndRegisterTimer(name: String): Timer = {
+      val found = registry.getTimers(new NameBasedMetricFilter(name)).values.iterator
+      findAndRegisterMetric(name, new Timer(), found)
     }
 
     private[this] def findAndRegisterMeter(name: String): Meter = {
       val found = registry.getMeters(new NameBasedMetricFilter(name)).values.iterator
+      findAndRegisterMetric(name, new Meter(), found)
+    }
+
+    private[this] def findAndRegisterMetric[T <: Metric](name: String, metric: => T, found: Iterator[T]): T = {
       if (found != null && found.hasNext()) {
         found.next()
       } else {
-        val meter = new Meter()
-        registry.register(name, meter)
-        meter
+        val m = metric
+        registry.register(name, m)
+        m
       }
     }
 
