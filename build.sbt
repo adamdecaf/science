@@ -36,7 +36,7 @@ val baseSettings: Seq[Setting[_]] =
     description := "Experiment with your code.",
     scalaVersion := "2.11.7",
     crossScalaVersions := Seq("2.10.5", "2.11.7"),
-    version in ThisBuild := "1.0.0",
+    version in ThisBuild := "1.0.1",
     scalacOptions ++= Seq(
       "-deprecation", "-feature", "-Ywarn-dead-code", "-Ywarn-numeric-widen", "-Ywarn-inaccessible", "-unchecked"
     ),

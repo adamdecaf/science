@@ -13,7 +13,7 @@ Add the following to your project's build definition. **Note:** There is a `0.0.
 ```scala
 resolvers += "bintray-adam-open-source-releases" at "https://dl.bintray.com/adamdecaf/open-source"
 libraryDependencies ++= Seq(
-  "org.decaf" %% "science" % "1.0.0"
+  "org.decaf" %% "science" % "1.0.1"
 )
 ```
 
