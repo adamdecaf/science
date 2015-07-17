@@ -1,6 +1,6 @@
 # science
 
-![](https://travis-ci.org/adamdecaf/science.svg)
+![](https://travis-ci.org/SpicyMonadz/science.svg)
 
 > Allowing experiments in program logic to be studied and tested.
 
